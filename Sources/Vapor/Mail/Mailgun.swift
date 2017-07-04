@@ -83,12 +83,36 @@ public final class Mailgun: MailProtocol {
             )
         )
         
-        req.formData = [
-            "from": from,
-            "to": to,
-            "subject": subject,
-            bodyKey: body
-        ]
+        
+
+        //TODO: currently only supports one attachment
+        if let attachment = mail.attachments.first?.emailAttachment {
+            req.headers["Content-Type"] = "multipart/form-data"
+            let attachmentField = FormData.Field(
+                name: "attachment",
+                filename: attachment.filename,
+                part: Part(
+                    headers: [:],
+                    body: attachment.body
+                    )
+                )
+        
+            req.formData = [
+                "from": from,
+                "to": to,
+                "subject": subject,
+                bodyKey: body,
+                "attachment": attachmentField
+            ]
+        } else {
+            req.formData = [
+                "from": from,
+                "to": to,
+                "subject": subject,
+                bodyKey: body
+            ]
+        }
+
         
         let client = try clientFactory.makeClient(
             hostname: apiURI.hostname,
